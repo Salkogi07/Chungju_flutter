@@ -128,7 +128,16 @@ class _TodoPageState extends State<TodoPage> {
                             value: todo["done"],
                             onChanged: (value) => _toggleDone(index, value),
                         ),
-                        title: Text(todo["text"]),
+                        title: Text(
+                            todo["text"],
+                            style: TextStyle(
+                              fontSize: 18,
+                              decoration: todo['done']
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                              color: todo["done"] ? Colors.grey : Colors.black
+                            ),
+                        ),
                         onLongPress: () => _deleteTodo(index),
                       ),
                     );
