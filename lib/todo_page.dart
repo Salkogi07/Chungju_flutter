@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/drawer.dart';
@@ -11,7 +13,7 @@ class TodoPage extends StatefulWidget {
 
 class _TodoPageState extends State<TodoPage> {
 
-  final List<String> todos = [];
+  List<Map<String, dynamic>> todos = [];
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -22,16 +24,18 @@ class _TodoPageState extends State<TodoPage> {
 
   void _loadTodos() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getStringList('todos');
-    if(saved != null){
+    final saved = prefs.getString('todos');
+    if(saved != null) {
+      final decoded = jsonDecode(saved) as List;
+
       setState(() {
-        todos.addAll(saved);
+        todos = decoded.cast<Map<String, dynamic>>();
       });
     }
   }
 
   void _deleteTodo(int index) async {
-    final removed = todos[index];
+    final removed = todos[index]["text"];
     setState(() {
       todos.removeAt(index);
     });
@@ -45,15 +49,23 @@ class _TodoPageState extends State<TodoPage> {
 
   void _saveTodos() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('todos', todos);
+    await prefs.setString('todos', jsonEncode(todos));
   }
 
-  void _addTodo(String text){
+  void _addTodo(String text) {
     if(text.trim().isEmpty) return;
 
     setState(() {
-      todos.add(text.trim());
+      todos.add({"text":text.trim(), "done": false});
       _controller.clear();
+    });
+
+    _saveTodos();
+  }
+
+  void _toggleDone(int index, bool? value) {
+    setState(() {
+      todos[index]["done"] = value;
     });
 
     _saveTodos();
@@ -103,13 +115,19 @@ class _TodoPageState extends State<TodoPage> {
                   : ListView.builder(
                   itemCount: todos.length,
                   itemBuilder: (context, index) {
+                    final todo = todos[index];
+
                     return Card(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 4
                       ),
                       child: ListTile(
-                        title: Text(todos[index]),
+                        leading: Checkbox(
+                            value: todo["done"],
+                            onChanged: (value) => _toggleDone(index, value),
+                        ),
+                        title: Text(todo["text"]),
                         onLongPress: () => _deleteTodo(index),
                       ),
                     );
