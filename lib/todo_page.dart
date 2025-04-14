@@ -87,6 +87,7 @@ class _TodoPageState extends State<TodoPage> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    onSubmitted: _addTodo,
                     decoration: InputDecoration(
                       hintText: "할 일을 입력하세요",
                       border: OutlineInputBorder(
